@@ -1,0 +1,30 @@
+# Ignore source and config not needed in VSIX
+src/**
+**/*.ts
+tsconfig.json
+.vscode/**
+*.code-workspace
+
+# Ignore version control + metadata
+.gitignore
+.git/**
+npm-debug.log
+yarn-error.log
+
+# Ignore system / noise files
+.DS_Store
+Thumbs.db
+
+# Ignore extra docs
+CHANGELOG.md
+CONTRIBUTING.md
+
+# Exclude local dependencies (none needed at runtime)
+node_modules/**
+
+# Include built output and assets
+!dist/**
+!assets/**
+!package.json
+!README.md
+!LICENSE.txt

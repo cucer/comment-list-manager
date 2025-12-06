@@ -1,0 +1,8 @@
+node_modules
+dist
+*.vsix
+.env
+.DS_Store
+__MACOSX
+.vscode
+*.log

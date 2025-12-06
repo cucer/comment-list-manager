@@ -1,0 +1,142 @@
+{
+  "name": "comment-list-manager",
+  "displayName": "Comment List Manager",
+  "description": "Lists all comments in the workspace with language, folder, and line info.",
+  "version": "0.0.1",
+  "publisher": "cucer",
+  "license": "MIT",
+  "author": {
+    "name": "Cagatay Ucer",
+    "url": "https://cagatayucer.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cucer/comment-list-manager"
+  },
+  "icon": "assets/icon.png",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "comment",
+    "list",
+    "java",
+    "javascript",
+    "js",
+    "ts",
+    "go",
+    "python",
+    "csharp",
+    "cpp",
+    "php",
+    "ruby",
+    "rust",
+    "sql",
+    "shell",
+    "swift",
+    "kotlin",
+    "objective-c",
+    "scala",
+    "lua",
+    "perl",
+    "haskell",
+    "clojure",
+    "coffeescript",
+    "html",
+    "css",
+    "json",
+    "xml",
+    "yaml",
+    "markdown"
+  ],
+  "homepage": "https://github.com/cucer/comment-list-manager",
+  "bugs": {
+    "url": "https://github.com/cucer/comment-list-manager/issues"
+  },
+  "activationEvents": [
+    "onCommand:commentListManager.scanWorkspace"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "commentListManager",
+          "title": "Comment List",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "commentListManager.scanWorkspace",
+        "title": "Comment List Manager: Scan Workspace"
+      },
+      {
+        "command": "commentListManager.openComment",
+        "title": "Comment List Manager: Open Comment"
+      }
+    ],
+    "views": {
+      "commentListManager": [
+        {
+          "id": "commentListManager.commentsView",
+          "name": "Comments"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "commentListManager.commentsView",
+        "contents": "No comments yet.\n[Scan workspace](command:commentListManager.scanWorkspace) to list comments."
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Comment List Manager",
+      "properties": {
+        "commentListManager.includeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/*.{ts,tsx,js,jsx,py,java,cs,cpp,c,h,go,rb,rs,php,sql,sh,bat,ps1,swift,kt,m,mm,scala,lua,pl,pm,erl,ex,exs,hs,clj,cljs,coffee,html,css,scss,less,json,xml,yml,yaml,md}"
+          ],
+          "description": "Glob patterns to include when scanning for comments."
+        },
+        "commentListManager.excludeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/{node_modules,.git,.svn,.hg,.DS_Store,dist,build,out}/**",
+            "**/package*.json"
+          ],
+          "description": "Glob patterns to exclude when scanning."
+        },
+        "commentListManager.maxFileSizeKb": {
+          "type": "number",
+          "default": 1024,
+          "description": "Skip files larger than this size (in KB)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.2.2"
+  }
+}
