@@ -56,9 +56,6 @@
   "bugs": {
     "url": "https://github.com/cucer/comment-list-manager/issues"
   },
-  "activationEvents": [
-    "onCommand:commentListManager.scanWorkspace"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -66,10 +63,7 @@
         {
           "id": "commentListManager",
           "title": "Comment List",
-          "icon": {
-            "dark": "assets/icon-activity-dark.svg",
-            "light": "assets/icon-activity-light.svg"
-          }
+          "icon": "assets/icon.png"
         }
       ]
     },
@@ -87,7 +81,8 @@
       "commentListManager": [
         {
           "id": "commentListManager.commentsView",
-          "name": "Comments"
+          "name": "Comments",
+          "icon": "assets/icon.png"
         }
       ]
     },
