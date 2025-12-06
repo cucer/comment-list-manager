@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
         try {
           const entries = await scanWorkspace({ includeGlobs, excludeGlobs, maxFileSizeKb });
           provider.setEntries(entries);
+          await focusCommentsView();
           vscode.window.showInformationMessage(`Comment List Manager: ${entries.length} comment(s) found.`);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
@@ -44,6 +45,15 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(scanCommand, openCommand);
+}
+
+async function focusCommentsView(): Promise<void> {
+  try {
+    await vscode.commands.executeCommand('workbench.view.extension.commentListManager');
+    await vscode.commands.executeCommand('commentListManager.commentsView.focus');
+  } catch (err) {
+    console.debug('Comment List Manager: focus view failed', err);
+  }
 }
 
 export function deactivate() {

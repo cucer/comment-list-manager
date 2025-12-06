@@ -66,7 +66,10 @@
         {
           "id": "commentListManager",
           "title": "Comment List",
-          "icon": "assets/icon-activity.png"
+          "icon": {
+            "dark": "assets/icon-activity-dark.svg",
+            "light": "assets/icon-activity-light.svg"
+          }
         }
       ]
     },
