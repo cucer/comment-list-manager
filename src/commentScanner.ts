@@ -6,7 +6,14 @@ const DEFAULT_INCLUDE = [
 ];
 
 const DEFAULT_EXCLUDE = [
-  '**/{node_modules,.git,.svn,.hg,.DS_Store,dist,build,out}/**',
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/.svn/**',
+  '**/.hg/**',
+  '**/.DS_Store/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/out/**',
   '**/package*.json',
 ];
 
