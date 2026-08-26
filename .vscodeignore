@@ -4,6 +4,8 @@ src/**
 tsconfig.json
 .vscode/**
 *.code-workspace
+eslint.config.js
+demo-samples/**
 
 # Ignore version control + metadata
 .gitignore
@@ -28,3 +30,6 @@ node_modules/**
 !package.json
 !README.md
 !LICENSE.txt
+
+# Re-exclude noise files even inside included folders (negation order matters)
+**/.DS_Store

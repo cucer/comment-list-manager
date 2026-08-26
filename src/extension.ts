@@ -8,25 +8,11 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerTreeDataProvider('commentListManager.commentsView', provider));
 
   const scanCommand = vscode.commands.registerCommand('commentListManager.scanWorkspace', async () => {
-    const config = vscode.workspace.getConfiguration('commentListManager');
-    const includeGlobs = config.get<string[]>('includeGlobs') ?? [];
-    const excludeGlobs = config.get<string[]>('excludeGlobs') ?? [];
-    const maxFileSizeKb = config.get<number>('maxFileSizeKb') ?? undefined;
+    await runScan(provider);
+  });
 
-    await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: 'Scanning comments...', cancellable: false },
-      async () => {
-        try {
-          const entries = await scanWorkspace({ includeGlobs, excludeGlobs, maxFileSizeKb });
-          provider.setEntries(entries);
-          await focusCommentsView();
-          vscode.window.showInformationMessage(`Comment List Manager: ${entries.length} comment(s) found.`);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          vscode.window.showErrorMessage(`Comment List Manager failed: ${message}`);
-        }
-      }
-    );
+  const refreshCommand = vscode.commands.registerCommand('commentListManager.refreshComments', async () => {
+    await runScan(provider);
   });
 
   const openCommand = vscode.commands.registerCommand(
@@ -44,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(scanCommand, openCommand);
+  context.subscriptions.push(scanCommand, refreshCommand, openCommand);
 }
 
 async function focusCommentsView(): Promise<void> {
@@ -58,4 +44,28 @@ async function focusCommentsView(): Promise<void> {
 
 export function deactivate() {
   // no-op
+}
+
+async function runScan(provider: CommentTreeProvider): Promise<void> {
+  const config = vscode.workspace.getConfiguration('commentListManager');
+  const includeGlobs = config.get<string[]>('includeGlobs') ?? [];
+  const excludeGlobs = config.get<string[]>('excludeGlobs') ?? [];
+  const maxFileSizeKb = config.get<number>('maxFileSizeKb') ?? undefined;
+
+  provider.clear();
+
+  await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'Scanning comments...', cancellable: false },
+    async () => {
+      try {
+        const entries = await scanWorkspace({ includeGlobs, excludeGlobs, maxFileSizeKb });
+        provider.setEntries(entries);
+        await focusCommentsView();
+        vscode.window.showInformationMessage(`Comment List Manager: ${entries.length} comment(s) found.`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(`Comment List Manager failed: ${message}`);
+      }
+    }
+  );
 }

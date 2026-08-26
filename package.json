@@ -2,7 +2,7 @@
   "name": "comment-list-manager",
   "displayName": "Comment List Manager",
   "description": "Lists all comments in the workspace with language, folder, and line info.",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "publisher": "cucer",
   "license": "MIT",
   "author": {
@@ -57,6 +57,7 @@
     "url": "https://github.com/cucer/comment-list-manager/issues"
   },
   "main": "./dist/extension.js",
+  "activationEvents": [],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -75,6 +76,10 @@
       {
         "command": "commentListManager.openComment",
         "title": "Comment List Manager: Open Comment"
+      },
+      {
+        "command": "commentListManager.refreshComments",
+        "title": "Comment List Manager: Refresh Comments"
       }
     ],
     "views": {
@@ -89,7 +94,7 @@
     "viewsWelcome": [
       {
         "view": "commentListManager.commentsView",
-        "contents": "No comments yet.\n[Scan workspace](command:commentListManager.scanWorkspace) to list comments."
+        "contents": "No comments yet.\n[Scan workspace](command:commentListManager.scanWorkspace) or [Refresh](command:commentListManager.refreshComments) to list comments."
       }
     ],
     "configuration": {
@@ -137,11 +142,13 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/vscode": "^1.84.0",
-    "typescript": "^5.2.2"
+    "eslint": "^10.9.1",
+    "typescript": "^5.2.2",
+    "typescript-eslint": "^8.68.0"
   }
 }

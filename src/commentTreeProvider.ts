@@ -36,6 +36,11 @@ export class CommentTreeProvider implements vscode.TreeDataProvider<CommentNode>
     this._onDidChangeTreeData.fire(undefined);
   }
 
+  clear(): void {
+    this.data = [];
+    this._onDidChangeTreeData.fire(undefined);
+  }
+
   getTreeItem(element: CommentNode): vscode.TreeItem {
     if (element.type === 'folder') {
       return new vscode.TreeItem(element.label, vscode.TreeItemCollapsibleState.Collapsed);

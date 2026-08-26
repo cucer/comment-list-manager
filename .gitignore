@@ -4,5 +4,14 @@ dist
 .env
 .DS_Store
 __MACOSX
-.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 *.log
+
+# Claude Code
+.claude/
+.claude.json
+.claude.json.backup
+CLAUDE.local.md
+.mcp.json

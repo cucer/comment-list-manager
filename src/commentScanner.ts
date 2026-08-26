@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CommentEntry, LanguageDefinition, ScanConfig } from './models';
-// testing
+
 const DEFAULT_INCLUDE = [
   '**/*.{ts,tsx,js,jsx,py,java,cs,cpp,c,h,go,rb,rs,php,sql,sh,bat,ps1,swift,kt,m,mm,scala,lua,pl,pm,erl,ex,exs,hs,clj,cljs,coffee,html,css,scss,less,json,xml,yml,yaml,md}',
 ];
@@ -232,124 +232,103 @@ function detectLanguage(uri: vscode.Uri): LanguageDefinition | undefined {
   return languageDefinitions.find((lang) => lang.extensions.includes(ext));
 }
 
+const STRING_QUOTE_CHARS = new Set(["'", '"', '`']);
+
+/**
+ * Single-pass scan that tracks whether we're inside a string literal so
+ * comment markers appearing in string content (e.g. `'/*'` in this very
+ * file's language definitions) aren't mistaken for real comments.
+ */
 function extractComments(
   text: string,
   language: LanguageDefinition
 ): Array<Omit<CommentEntry, 'uri' | 'filePath' | 'folder' | 'languageId'>> {
-  const lineOffsets = computeLineOffsets(text);
-  const lineComments = extractLineComments(text, language, lineOffsets);
-  const blockComments = extractBlockComments(text, language, lineOffsets);
-  return [...lineComments, ...blockComments];
-}
-
-function extractLineComments(
-  text: string,
-  language: LanguageDefinition,
-  lineOffsets: number[]
-): Array<Omit<CommentEntry, 'uri' | 'filePath' | 'folder' | 'languageId'>> {
-  const markers = language.lineCommentMarkers ?? [];
-  if (!markers.length) {
-    return [];
-  }
-
-  const lines = text.split(/\r?\n/);
+  const lineMarkers = language.lineCommentMarkers ?? [];
+  const blockMarkers = [...(language.blockCommentMarkers ?? [])].sort(
+    (a, b) => b[0].length - a[0].length
+  );
   const entries: Array<
     Omit<CommentEntry, 'uri' | 'filePath' | 'folder' | 'languageId'>
   > = [];
 
-  lines.forEach((lineText, index) => {
-    for (const marker of markers) {
-      const pos = lineText.indexOf(marker);
-      if (pos !== -1) {
-        const raw = lineText.slice(pos + marker.length);
-        const cleaned = raw.trim();
-        if (cleaned.length) {
-          entries.push({
-            line: index + 1,
-            text: cleaned,
-            type: 'line',
-            marker,
-          });
+  if (!lineMarkers.length && !blockMarkers.length) {
+    return entries;
+  }
+
+  const n = text.length;
+  let i = 0;
+  let line = 1;
+  let quoteChar: string | null = null;
+
+  while (i < n) {
+    const ch = text[i];
+
+    if (quoteChar) {
+      if (ch === '\\') {
+        if (text[i + 1] === '\n') {
+          line++;
         }
-        break;
-      }
-    }
-  });
-
-  return entries;
-}
-
-function extractBlockComments(
-  text: string,
-  language: LanguageDefinition,
-  lineOffsets: number[]
-): Array<Omit<CommentEntry, 'uri' | 'filePath' | 'folder' | 'languageId'>> {
-  const blocks = language.blockCommentMarkers ?? [];
-  if (!blocks.length) {
-    return [];
-  }
-
-  const entries: Array<
-    Omit<CommentEntry, 'uri' | 'filePath' | 'folder' | 'languageId'>
-  > = [];
-
-  for (const [start, end] of blocks) {
-    const pattern = new RegExp(
-      escapeRegex(start) + '[\\s\\S]*?' + escapeRegex(end),
-      'g'
-    );
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(text)) !== null) {
-      const content = match[0]
-        .slice(start.length, match[0].length - end.length)
-        .trim();
-      if (!content.length) {
+        i += 2;
         continue;
       }
-      const startOffset = match.index;
-      const line = lineFromOffset(startOffset, lineOffsets);
-      entries.push({
-        line,
-        text: content,
-        type: 'block',
-        marker: start,
-      });
+      if (ch === quoteChar) {
+        quoteChar = null;
+      } else if (ch === '\n') {
+        line++;
+        if (quoteChar !== '`') {
+          quoteChar = null;
+        }
+      }
+      i++;
+      continue;
     }
+
+    const block = blockMarkers.find(([start]) => text.startsWith(start, i));
+    if (block) {
+      const [start, end] = block;
+      const contentStart = i + start.length;
+      const endIndex = text.indexOf(end, contentStart);
+      const contentEnd = endIndex === -1 ? n : endIndex;
+      const content = text.slice(contentStart, contentEnd).trim();
+      if (content.length) {
+        entries.push({ line, text: content, type: 'block', marker: start });
+      }
+      const consumedEnd = endIndex === -1 ? n : endIndex + end.length;
+      for (let j = i; j < consumedEnd; j++) {
+        if (text[j] === '\n') {
+          line++;
+        }
+      }
+      i = consumedEnd;
+      continue;
+    }
+
+    const lineMarker = lineMarkers.find((marker) => text.startsWith(marker, i));
+    if (lineMarker) {
+      const contentStart = i + lineMarker.length;
+      const newlineIndex = text.indexOf('\n', contentStart);
+      const contentEnd = newlineIndex === -1 ? n : newlineIndex;
+      const cleaned = text.slice(contentStart, contentEnd).trim();
+      if (cleaned.length) {
+        entries.push({ line, text: cleaned, type: 'line', marker: lineMarker });
+      }
+      i = contentEnd;
+      continue;
+    }
+
+    if (STRING_QUOTE_CHARS.has(ch)) {
+      quoteChar = ch;
+      i++;
+      continue;
+    }
+
+    if (ch === '\n') {
+      line++;
+    }
+    i++;
   }
 
   return entries;
-}
-
-function computeLineOffsets(text: string): number[] {
-  const offsets = [0];
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === '\n') {
-      offsets.push(i + 1);
-    }
-  }
-  return offsets;
-}
-
-function lineFromOffset(offset: number, offsets: number[]): number {
-  let low = 0;
-  let high = offsets.length - 1;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    if (
-      offsets[mid] <= offset &&
-      (mid === offsets.length - 1 || offsets[mid + 1] > offset)
-    ) {
-      return mid + 1;
-    }
-    if (offsets[mid] > offset) {
-      high = mid - 1;
-    } else {
-      low = mid + 1;
-    }
-  }
-
-  return offsets.length;
 }
 
 function joinGlobs(globs: string[]): string {
@@ -358,12 +337,3 @@ function joinGlobs(globs: string[]): string {
   }
   return `{${globs.join(',')}}`;
 }
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/*
-TypesInstallerInitializationFailedEventteetst
-sdfkşjsdklşfjlksd
-*/

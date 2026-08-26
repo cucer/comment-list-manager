@@ -6,6 +6,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 > Author: [cucer](https://github.com/cucer)
 
-## v1.0.0 — 06 Dec 2025
+## v0.1.0 — 27 Aug 2026
+
+- Added `commentListManager.refreshComments` command and a Refresh link in the empty-state view.
+
+## v0.0.2 — 06 Dec 2025
 
 Initial pre-release
